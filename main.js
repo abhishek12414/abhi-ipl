@@ -30,7 +30,6 @@ rawFile.onreadystatechange = function () {
     if (rawFile.status === 200 || rawFile.status == 0) {
       const allText = rawFile.responseText;
       result = toJson(allText);
-      console.log(JSON.stringify(result));
     }
   }
 }
@@ -73,11 +72,15 @@ function matchesPerYear() {
     // console.log('Season 2017 : ' + season2017);
     // for(let i)
 
-    var chart = Highcharts.chart('container', {
+    Highcharts.chart('container', {
 
         title: { text: 'IPL Match Analysis' },
         subtitle: { text: 'By Year' },
-        xAxis: { categories: Object.keys(seasonMaches) },
+        xAxis: { 
+            title: {text: 'Years'},
+            categories: Object.keys(seasonMaches) 
+        },
+        yAxis: { title: {text: 'Maches'}},
 
         series: [{
             type: 'column',
@@ -93,27 +96,68 @@ function winningMatchesPerYear() {
     let seasonWinning = {};
 
     for(let i=0; i<result.length; i++) {
+        
         let row = result[i];
+        
+        let winner;
+
+        if(row.winner == 'Rising Pune Supergiants')
+            winner = 'Rising Pune Supergiant';
+        else if(row.winner == "")
+            winner = 'No Result';
+        else 
+            winner = row.winner;
+
         if(row.season in seasonWinning) {
-            if( seasonWinning[row.season][row.winner] )
-                seasonWinning[row.season][row.winner] += 1;
+            if( seasonWinning[row.season][winner] )
+                seasonWinning[row.season][winner] += 1;
             else 
-                seasonWinning[row.season][row.winner] = 1            
+                seasonWinning[row.season][winner] = 1            
         } else {
-            let x = {};
-            x[row.winner] = 1;
-            seasonWinning[row.season]= x;
+            let teamObj = {};
+            teamObj[winner] = 1;
+            seasonWinning[row.season]= teamObj;
         }
     }
 
-    console.log(seasonWinning);
+    // console.log(seasonWinning);
 
+    //print teamnames
+    let teamNames = [];
+
+    for (let year in seasonWinning) {
+        for(let team in seasonWinning[year]) {
+            if(!teamNames.includes(team))
+                teamNames.push(team);
+        }
+    }
+
+    let teamWinningByYear = [];
+
+    //finding winning of each year
+    for(let teamName of teamNames) {
+        let win = [];
+        for(let year in seasonWinning) {
+            if(teamName in seasonWinning[year]) {
+                win.push(seasonWinning[year][teamName])
+            } else {
+                win.push(0)
+            }
+        }
+        let obj = {
+            name : teamName,
+            data : win
+        }
+        teamWinningByYear.push(obj);
+    }
+
+        
     Highcharts.chart('container', {
         chart: {
-            type: 'column'
+            type: 'bar'
         },
         title: {
-            text: 'Stacked column chart'
+            text: 'Stacked bar chart'
         },
         xAxis: {
             categories: Object.keys(seasonWinning)
@@ -122,50 +166,20 @@ function winningMatchesPerYear() {
             min: 0,
             title: {
                 text: 'Total fruit consumption'
-            },
-            stackLabels: {
-                enabled: true,
-                style: {
-                    fontWeight: 'bold',
-                    color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
-                }
             }
         },
         legend: {
-            align: 'right',
-            x: -30,
-            verticalAlign: 'top',
-            y: 25,
-            floating: true,
-            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
-            borderColor: '#CCC',
-            borderWidth: 1,
-            shadow: false
-        },
-        tooltip: {
-            headerFormat: '<b>{point.x}</b><br/>',
-            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+            reversed: true
         },
         plotOptions: {
-            column: {
+            
+            series: {
                 stacking: 'normal',
                 dataLabels: {
-                    enabled: true,
-                    color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white'
+                    // enabled: true
                 }
             }
         },
-        series: 
-        
-        [{
-            name: 'John',
-            data: [5, 3, 4, 7, 2]
-        }, {
-            name: 'Jane',
-            data: [2, 2, 3, 2, 1]
-        }, {
-            name: 'Joe',
-            data: [3, 4, 4, 2, 5]
-        }]
+        series: teamWinningByYear
     });
 }
