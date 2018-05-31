@@ -97,13 +97,13 @@ function matchesPerYear() {
 
     Highcharts.chart('container', {
 
-        title: { text: 'IPL Match Analysis' },
-        subtitle: { text: 'By Year' },
+        title: { text: 'IPL Data Analysis' },
+        subtitle: { text: 'Matches played per year of all the years in IPL' },
         xAxis: { 
             title: {text: 'Years'},
             categories: Object.keys(seasonMaches) 
         },
-        yAxis: { title: {text: 'Maches'}},
+        yAxis: { title: {text: 'No. of Maches'}},
         plotOptions: {
             series: {
                 borderWidth: 0,
@@ -185,13 +185,13 @@ function winningMatchesPerYear() {
 
         
     Highcharts.chart('container', {
+
+        title: { text: 'IPL Data Analysis' },
+        subtitle: { text: 'Matches won of all teams over all the years of IPL' },
         chart: {
             type: 'bar'
         },
-        title: {
-            text: 'IPL, Per year winning matches'
-        },
-        xAxis: {
+        xAxis: { 
             categories: Object.keys(seasonWinning),
             title: {
                 text: 'Years'
@@ -200,7 +200,7 @@ function winningMatchesPerYear() {
         yAxis: {
             min: 0,
             title: {
-                text: 'Wins per year'
+                text: 'Total Wins of year'
             }
         },
         legend: {
@@ -268,8 +268,8 @@ function extraRunPerTeam() {
 
     Highcharts.chart('container', {
 
-        title: { text: 'IPL Match Analysis' },
-        subtitle: { text: 'By Year' },
+        title: { text: 'IPL Data Analysis' },
+        subtitle: { text: 'Extra runs conceded per team @2016' },
         xAxis: { 
             title: {text: 'Teams'},
             categories: Object.keys(extraDeliveries) 
@@ -344,11 +344,12 @@ function topEconomyBowlers() {
         }
     }
 
-    // console.log(economicalBowlers);
+    console.log(economicalBowlers);
 
     let bowlersEconomy = {}
 
     for(bowler in economicalBowlers) {
+        if((economicalBowlers[bowler]['no_of_balls']) >= 90)
         bowlersEconomy[bowler] = ( Number(economicalBowlers[bowler]['runs']) * 6 / Number(economicalBowlers[bowler]['no_of_balls']));
     }
 
@@ -365,26 +366,26 @@ function topEconomyBowlers() {
     let bowlerCount = 15;
 
     for(let i=0; i<bowlerCount; i++) {
-        top15Bowlers[sortedBowlerName[i]] = Number((bowlersEconomy[sortedBowlerName[i]]).toFixed(2));
+        top15Bowlers[sortedBowlerName[i]] = bowlersEconomy[sortedBowlerName[i]];
     }
-    console.log(top15Bowlers);
+    // console.log(top15Bowlers);
     
     //Display chart
     Highcharts.chart('container', {
 
-        title: { text: 'IPL Match Analysis' },
-        subtitle: { text: 'By Year' },
+        title: { text: 'IPL Data Analysis' },
+        subtitle: { text: 'Top 15 Economical Bowlers @2015, Min Over 15' },
         xAxis: { 
-            title: {text: 'Years'},
+            title: {text: 'Bolwer Name'},
             categories: Object.keys(top15Bowlers) 
         },
-        yAxis: { title: {text: 'Maches'}},
+        yAxis: { title: {text: 'Economy'}},
         plotOptions: {
             series: {
                 borderWidth: 0,
                 dataLabels: {
                     enabled: true,
-                    format: '{point.y:.f}'
+                    format: '{point.y:.2f}'
                 }
             }
         },
