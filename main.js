@@ -157,15 +157,18 @@ function winningMatchesPerYear() {
             type: 'bar'
         },
         title: {
-            text: 'Stacked bar chart'
+            text: 'IPL, Per year winning matches'
         },
         xAxis: {
-            categories: Object.keys(seasonWinning)
+            categories: Object.keys(seasonWinning),
+            title: {
+                text: 'Years'
+            }
         },
         yAxis: {
             min: 0,
             title: {
-                text: 'Total fruit consumption'
+                text: 'Wins per year'
             }
         },
         legend: {
