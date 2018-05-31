@@ -1,5 +1,8 @@
-//to store json result 
+//to store json result
 let result;
+let deliveries;
+getJsonFromCSV();
+getJsonFromCSVDeliveries();
 
 //CSV conversion
 function toJson(csvData) {
@@ -22,20 +25,40 @@ function toJson(csvData) {
 // json = toJson(csv);
 // console.log(JSON.stringify(json));
 
-
-const rawFile = new XMLHttpRequest();
-rawFile.open("GET","./assests/matches.csv", true);
-rawFile.onreadystatechange = function () {
-  if (rawFile.readyState === 4) {
-    if (rawFile.status === 200 || rawFile.status == 0) {
-      const allText = rawFile.responseText;
-      result = toJson(allText);
+function getJsonFromCSV() {
+    const rawFile = new XMLHttpRequest();
+    rawFile.open("GET", "./assests/matches.csv", true);
+    rawFile.onreadystatechange = function () {
+        if (rawFile.readyState === 4) {
+            if (rawFile.status === 200 || rawFile.status == 0) {
+                const allText = rawFile.responseText;
+                result = toJson(allText);
+                // return toJson(allText);
+                // console.log(result);
+            }
+        }
     }
-  }
-}
-rawFile.send(null);
+    rawFile.send(null);
+};
+
+function getJsonFromCSVDeliveries() {
+    const rawFile = new XMLHttpRequest();
+    rawFile.open("GET", "./assests/deliveries.csv", true);
+    rawFile.onreadystatechange = function () {
+        if (rawFile.readyState === 4) {
+            if (rawFile.status === 200 || rawFile.status == 0) {
+                const allText = rawFile.responseText;
+                deliveries = toJson(allText);
+                console.log(deliveries)
+                // return toJson(allText);
+            }
+        }
+    }
+    rawFile.send(null);
+};
 
 
+//Task 1: Plot the number of matches played per year of all the years in IPL.
 function matchesPerYear() {
     // console.log(result.length)
     // console.log(result[0].season)
@@ -81,7 +104,15 @@ function matchesPerYear() {
             categories: Object.keys(seasonMaches) 
         },
         yAxis: { title: {text: 'Maches'}},
-
+        plotOptions: {
+            series: {
+                borderWidth: 0,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.y:.f}'
+                }
+            }
+        },
         series: [{
             type: 'column',
             colorByPoint: true,
@@ -92,6 +123,7 @@ function matchesPerYear() {
     });
 }
 
+//Task 2: Plot a stacked bar chart of matches won of all teams over all the years of IPL.
 function winningMatchesPerYear() {
     let seasonWinning = {};
 
@@ -184,5 +216,184 @@ function winningMatchesPerYear() {
             }
         },
         series: teamWinningByYear
+    });
+}
+
+//Task 3: For the year 2016 plot the extra runs conceded per team.
+function extraRunPerTeam() {
+
+    //finding the match ids of particular year
+    let yearMatches = {};
+    for(let i=0; i<result.length; i++) {
+        //read season/year
+        const season = result[i].season;
+
+        if(season in yearMatches) {
+            let ids = yearMatches[season];
+            ids.push(result[i].id)
+            yearMatches[season] = ids
+        } else {
+            let ids= [];
+            ids.push(result[i].id)
+            yearMatches[season] = ids;
+        }
+    }
+
+    // console.log(yearMatches);
+
+    // filtering match ids of particular year
+    const matchYear = 2016;
+    const matchIds =  yearMatches[matchYear];
+
+    // console.log(matchIds);
+    const minMatchId = matchIds[0];
+    const maxMatchId = matchIds[matchIds.length - 1]
+
+    //Reading the deliveries data and calculating the extra runs
+    let extraDeliveries = {};
+
+    for(let i=0; i<deliveries.length; i++) {
+        let delivery = deliveries[i];
+        if( Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
+            const bowling_team = delivery['bowling_team']
+            if(bowling_team in extraDeliveries) {
+                extraDeliveries[bowling_team] += Number(delivery['extra_runs']);
+            } else {
+                extraDeliveries[bowling_team] = Number(delivery['extra_runs']);
+            }
+        }
+    }
+
+    // console.log(extraDeliveries);
+
+    Highcharts.chart('container', {
+
+        title: { text: 'IPL Match Analysis' },
+        subtitle: { text: 'By Year' },
+        xAxis: { 
+            title: {text: 'Teams'},
+            categories: Object.keys(extraDeliveries) 
+        },
+        yAxis: { 
+            title: {text: 'No. of extra runs'}
+        },
+        plotOptions: {
+            series: {
+                borderWidth: 0,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.y:.f}'
+                }
+            }
+        },
+        series: [{
+            type: 'column',
+            colorByPoint: true,
+            data: Object.values(extraDeliveries),
+            showInLegend: false
+        }]
+
+    });
+}
+
+//Task 4: For the year 2015 plot the top economical bowlers.
+function topEconomyBowlers() {
+    //finding the match ids of particular year
+    let yearMatches = {};
+    for(let i=0; i<result.length; i++) {
+        //read season/year
+        const season = result[i].season;
+
+        if(season in yearMatches) {
+            let ids = yearMatches[season];
+            ids.push(result[i].id)
+            yearMatches[season] = ids
+        } else {
+            let ids= [];
+            ids.push(result[i].id)
+            yearMatches[season] = ids;
+        }
+    }
+
+    // filtering match ids of particular year
+    const matchYear = 2015;
+    const matchIds =  yearMatches[matchYear];
+
+    const minMatchId = matchIds[0];
+    const maxMatchId = matchIds[matchIds.length - 1];
+
+    let economicalBowlers = {};
+
+    for(let i=0; i<deliveries.length; i++) {
+        let delivery = deliveries[i];
+        if( Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
+            const bowlerName = delivery['bowler']
+            const extraRuns = Number(delivery['wide_runs']) + 
+                              Number(delivery['noball_runs']) +
+                              Number(delivery['batsman_runs']);
+
+            if(bowlerName in economicalBowlers) {
+                economicalBowlers[bowlerName]['runs'] += extraRuns;
+                economicalBowlers[bowlerName]['no_of_balls'] += 1; 
+            } else {
+                let bowler = {}
+                bowler['runs'] = extraRuns;
+                bowler['no_of_balls'] = 1;
+                economicalBowlers[bowlerName] = bowler;
+            }
+        }
+    }
+
+    // console.log(economicalBowlers);
+
+    let bowlersEconomy = {}
+
+    for(bowler in economicalBowlers) {
+        bowlersEconomy[bowler] = ( Number(economicalBowlers[bowler]['runs']) * 6 / Number(economicalBowlers[bowler]['no_of_balls']));
+    }
+
+    // console.log(bowlersEconomy);
+
+    let sortedBowlerName = Object.keys(bowlersEconomy).sort(function(a,b){
+
+        return bowlersEconomy[a]-bowlersEconomy[b]
+    });
+    // console.log(sorted);
+
+    
+    let top15Bowlers = {}
+    let bowlerCount = 15;
+
+    for(let i=0; i<bowlerCount; i++) {
+        top15Bowlers[sortedBowlerName[i]] = Number((bowlersEconomy[sortedBowlerName[i]]).toFixed(2));
+    }
+    console.log(top15Bowlers);
+    
+    //Display chart
+    Highcharts.chart('container', {
+
+        title: { text: 'IPL Match Analysis' },
+        subtitle: { text: 'By Year' },
+        xAxis: { 
+            title: {text: 'Years'},
+            categories: Object.keys(top15Bowlers) 
+        },
+        yAxis: { title: {text: 'Maches'}},
+        plotOptions: {
+            series: {
+                borderWidth: 0,
+                dataLabels: {
+                    enabled: true,
+                    format: '{point.y:.f}'
+                }
+            }
+        },
+        series: [{
+            type: 'column',
+            colorByPoint: true,
+            data: Object.values(top15Bowlers),
+            showInLegend: false
+        }]
+
     });
 }
