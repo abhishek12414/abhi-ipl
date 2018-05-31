@@ -1,5 +1,5 @@
 //to store json result
-let result;
+let matches;
 let deliveries;
 getJsonFromCSV();
 getJsonFromCSVDeliveries();
@@ -20,11 +20,6 @@ function toJson(csvData) {
     return records;
 }
 
-//test code of toJson()
-// csv="author,title,publishDate\nDan Simmons,Hyperion,1989\nDouglas Adams,The Hitchhiker's Guide to the Galaxy,1979";
-// json = toJson(csv);
-// console.log(JSON.stringify(json));
-
 function getJsonFromCSV() {
     const rawFile = new XMLHttpRequest();
     rawFile.open("GET", "./assests/matches.csv", true);
@@ -32,9 +27,7 @@ function getJsonFromCSV() {
         if (rawFile.readyState === 4) {
             if (rawFile.status === 200 || rawFile.status == 0) {
                 const allText = rawFile.responseText;
-                result = toJson(allText);
-                // return toJson(allText);
-                // console.log(result);
+                matches = toJson(allText);
             }
         }
     }
@@ -49,8 +42,6 @@ function getJsonFromCSVDeliveries() {
             if (rawFile.status === 200 || rawFile.status == 0) {
                 const allText = rawFile.responseText;
                 deliveries = toJson(allText);
-                console.log(deliveries)
-                // return toJson(allText);
             }
         }
     }
@@ -60,41 +51,18 @@ function getJsonFromCSVDeliveries() {
 
 //Task 1: Plot the number of matches played per year of all the years in IPL.
 function matchesPerYear() {
-    // console.log(result.length)
-    // console.log(result[0].season)
-    // console.log(Object.keys(result[0]))
 
-    let seasonMaches = {};
+    let seasonMaches = {};   
 
-    for(let i=0; i<result.length; i++) {
-        const season = result[i].season;
+    for (let match of matches) {
+        const season = match.season;
         if(season in seasonMaches) {
             seasonMaches[season] = seasonMaches[season] + 1
         } else {
             seasonMaches[season] = 1;
         }
     }
-
-    //test code
-    // let seasonMaches = {a: 3, b:5};
-    // console.log(Object.keys(seasonMaches));
-    // console.log(Object.values(seasonMaches));
-
-    // if('b' in seasonMaches) {
-    //     let value = seasonMaches['b']
-    //     seasonMaches['b'] = value+1;
-    // } else {
-    //     console.log('not here')
-    //     seasonMaches['c'] = 3;
-    // }
-
-    // console.log(Object.keys(seasonMaches));
-    // console.log(Object.values(seasonMaches));
-
-    // console.log('Season 2016 : ' + season2016);
-    // console.log('Season 2017 : ' + season2017);
-    // for(let i)
-
+    
     Highcharts.chart('container', {
 
         title: { text: 'IPL Data Analysis' },
@@ -127,32 +95,28 @@ function matchesPerYear() {
 function winningMatchesPerYear() {
     let seasonWinning = {};
 
-    for(let i=0; i<result.length; i++) {
-        
-        let row = result[i];
-        
+    for(let match of matches) {
+                
         let winner;
 
-        if(row.winner == 'Rising Pune Supergiants')
+        if(match.winner == 'Rising Pune Supergiants')
             winner = 'Rising Pune Supergiant';
-        else if(row.winner == "")
+        else if(match.winner == "")
             winner = 'No Result';
         else 
-            winner = row.winner;
+            winner = match.winner;
 
-        if(row.season in seasonWinning) {
-            if( seasonWinning[row.season][winner] )
-                seasonWinning[row.season][winner] += 1;
+        if(match.season in seasonWinning) {
+            if( seasonWinning[match.season][winner] )
+                seasonWinning[match.season][winner] += 1;
             else 
-                seasonWinning[row.season][winner] = 1            
+                seasonWinning[match.season][winner] = 1            
         } else {
             let teamObj = {};
             teamObj[winner] = 1;
-            seasonWinning[row.season]= teamObj;
+            seasonWinning[match.season]= teamObj;
         }
     }
-
-    // console.log(seasonWinning);
 
     //print teamnames
     let teamNames = [];
@@ -224,36 +188,32 @@ function extraRunPerTeam() {
 
     //finding the match ids of particular year
     let yearMatches = {};
-    for(let i=0; i<result.length; i++) {
+    for(let match of matches) {
         //read season/year
-        const season = result[i].season;
+        const season = match.season;
 
         if(season in yearMatches) {
             let ids = yearMatches[season];
-            ids.push(result[i].id)
+            ids.push(match.id)
             yearMatches[season] = ids
         } else {
             let ids= [];
-            ids.push(result[i].id)
+            ids.push(match.id)
             yearMatches[season] = ids;
         }
     }
-
-    // console.log(yearMatches);
 
     // filtering match ids of particular year
     const matchYear = 2016;
     const matchIds =  yearMatches[matchYear];
 
-    // console.log(matchIds);
     const minMatchId = matchIds[0];
     const maxMatchId = matchIds[matchIds.length - 1]
 
     //Reading the deliveries data and calculating the extra runs
     let extraDeliveries = {};
 
-    for(let i=0; i<deliveries.length; i++) {
-        let delivery = deliveries[i];
+    for(const delivery of deliveries) {
         if( Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
             const bowling_team = delivery['bowling_team']
             if(bowling_team in extraDeliveries) {
@@ -263,8 +223,6 @@ function extraRunPerTeam() {
             }
         }
     }
-
-    // console.log(extraDeliveries);
 
     Highcharts.chart('container', {
 
@@ -300,21 +258,20 @@ function extraRunPerTeam() {
 function topEconomyBowlers() {
     //finding the match ids of particular year
     let yearMatches = {};
-    for(let i=0; i<result.length; i++) {
+
+    for(const match of matches) {
         //read season/year
-        const season = result[i].season;
+        const season = match.season;
 
         if(season in yearMatches) {
-            let ids = yearMatches[season];
-            ids.push(result[i].id)
-            yearMatches[season] = ids
+            (yearMatches[season]).push(match.id)
         } else {
             let ids= [];
-            ids.push(result[i].id)
+            ids.push(match.id)
             yearMatches[season] = ids;
         }
     }
-
+    
     // filtering match ids of particular year
     const matchYear = 2015;
     const matchIds =  yearMatches[matchYear];
@@ -324,8 +281,8 @@ function topEconomyBowlers() {
 
     let economicalBowlers = {};
 
-    for(let i=0; i<deliveries.length; i++) {
-        let delivery = deliveries[i];
+    for(const delivery of deliveries) {
+        
         if( Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
             const bowlerName = delivery['bowler']
             const extraRuns = Number(delivery['wide_runs']) + 
@@ -344,8 +301,6 @@ function topEconomyBowlers() {
         }
     }
 
-    console.log(economicalBowlers);
-
     let bowlersEconomy = {}
 
     for(bowler in economicalBowlers) {
@@ -353,22 +308,15 @@ function topEconomyBowlers() {
         bowlersEconomy[bowler] = ( Number(economicalBowlers[bowler]['runs']) * 6 / Number(economicalBowlers[bowler]['no_of_balls']));
     }
 
-    // console.log(bowlersEconomy);
-
     let sortedBowlerName = Object.keys(bowlersEconomy).sort(function(a,b){
-
         return bowlersEconomy[a]-bowlersEconomy[b]
     });
-    // console.log(sorted);
-
     
-    let top15Bowlers = {}
-    let bowlerCount = 15;
+    let sortBowlers = {};
 
-    for(let i=0; i<bowlerCount; i++) {
-        top15Bowlers[sortedBowlerName[i]] = bowlersEconomy[sortedBowlerName[i]];
+    for(const name of sortedBowlerName) {
+        sortBowlers[name] = bowlersEconomy[name]
     }
-    // console.log(top15Bowlers);
     
     //Display chart
     Highcharts.chart('container', {
@@ -377,7 +325,7 @@ function topEconomyBowlers() {
         subtitle: { text: 'Top 15 Economical Bowlers @2015, Min Over 15' },
         xAxis: { 
             title: {text: 'Bolwer Name'},
-            categories: Object.keys(top15Bowlers) 
+            categories: (Object.keys(sortBowlers)).slice(0, 15)
         },
         yAxis: { title: {text: 'Economy'}},
         plotOptions: {
@@ -392,9 +340,107 @@ function topEconomyBowlers() {
         series: [{
             type: 'column',
             colorByPoint: true,
-            data: Object.values(top15Bowlers),
+            data: (Object.values(sortBowlers)).slice(0, 15),
             showInLegend: false
         }]
 
+    });
+}
+
+//Task 5: Story
+function myStory() {
+    
+    let manOfTheMatch = {};
+
+    for(const match of matches) {
+        let mom = match.player_of_match;
+    
+        // mom = (mom === "") ? 'No Result' : mom;
+        if(mom === "")
+            continue;
+
+        if( mom in manOfTheMatch) {
+
+            if(manOfTheMatch[mom][match.winner])
+                manOfTheMatch[mom][match.winner] += 1;
+            else
+                manOfTheMatch[mom][match.winner] = 1;
+        
+        } else {
+            let player = {};
+            player[match['winner']] = 1;
+            manOfTheMatch[mom] = player;        
+        }
+    }
+
+    console.log(manOfTheMatch)
+
+    let totalMom = {}
+    // console.log(typeof(manOfTheMatch))
+    
+    for (const temp in manOfTheMatch) {
+        console.log(temp)
+        console.log(manOfTheMatch[temp])
+    }
+
+
+    
+    Highcharts.chart('container', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Stacked column chart'
+        },
+        xAxis: {
+            categories: ['Apples', 'Oranges', 'Pears', 'Grapes', 'Bananas']
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Total fruit consumption'
+            },
+            stackLabels: {
+                enabled: true,
+                style: {
+                    fontWeight: 'bold',
+                    color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
+                }
+            }
+        },
+        legend: {
+            align: 'right',
+            x: -30,
+            verticalAlign: 'top',
+            y: 25,
+            floating: true,
+            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
+            borderColor: '#CCC',
+            borderWidth: 1,
+            shadow: false
+        },
+        tooltip: {
+            headerFormat: '<b>{point.x}</b><br/>',
+            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+                dataLabels: {
+                    enabled: true,
+                    color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white'
+                }
+            }
+        },
+        series: [{
+            name: 'John',
+            data: [5, 3, 4, 7, 2]
+        }, {
+            name: 'Jane',
+            data: [2, 2, 3, 2, 1]
+        }, {
+            name: 'Joe',
+            data: [3, 4, 4, 2, 5]
+        }]
     });
 }
