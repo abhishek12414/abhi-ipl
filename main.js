@@ -89,6 +89,7 @@ function matchesPerYear() {
         }]
 
     });
+    $('#container1').hide();
 }
 
 //Task 2: Plot a stacked bar chart of matches won of all teams over all the years of IPL.
@@ -181,6 +182,7 @@ function winningMatchesPerYear() {
         },
         series: teamWinningByYear
     });
+    $('#container1').hide();
 }
 
 //Task 3: For the year 2016 plot the extra runs conceded per team.
@@ -252,6 +254,7 @@ function extraRunPerTeam() {
         }]
 
     });
+    $('#container1').hide();
 }
 
 //Task 4: For the year 2015 plot the top economical bowlers.
@@ -345,6 +348,7 @@ function topEconomyBowlers() {
         }]
 
     });
+    $('#container1').hide();
 }
 
 //Task 5: Story
@@ -354,8 +358,7 @@ function myStory() {
 
     for(const match of matches) {
         let mom = match.player_of_match;
-    
-        // mom = (mom === "") ? 'No Result' : mom;
+
         if(mom === "")
             continue;
 
@@ -373,74 +376,95 @@ function myStory() {
         }
     }
 
-    console.log(manOfTheMatch)
-
     let totalMom = {}
-    // console.log(typeof(manOfTheMatch))
     
-    for (const temp in manOfTheMatch) {
-        console.log(temp)
-        console.log(manOfTheMatch[temp])
+    for (const playerName in manOfTheMatch) {
+        const player = manOfTheMatch[playerName];
+        let sum = (Object.values(player)).reduce(function(acc, val) { return acc + val; });
+        totalMom[playerName] = sum;
     }
 
+    let sortedPlayerName = Object.keys(totalMom).sort(function(a,b){
+        return totalMom[b]-totalMom[a]
+    });
 
+    let sortedTotalMOM = {}
+    sortedPlayerName.forEach((playerName)=>{
+        sortedTotalMOM[playerName] = totalMom[playerName]
+    })
     
+    //Display chart
     Highcharts.chart('container', {
-        chart: {
-            type: 'column'
+
+        title: { text: 'IPL Data Analysis' },
+        subtitle: { text: 'Top 15 MOM all years' },
+        xAxis: { 
+            title: {text: 'Player Name'},
+            categories: (Object.keys(sortedTotalMOM)).slice(0, 15)
         },
-        title: {
-            text: 'Stacked column chart'
-        },
-        xAxis: {
-            categories: ['Apples', 'Oranges', 'Pears', 'Grapes', 'Bananas']
-        },
-        yAxis: {
-            min: 0,
-            title: {
-                text: 'Total fruit consumption'
-            },
-            stackLabels: {
-                enabled: true,
-                style: {
-                    fontWeight: 'bold',
-                    color: (Highcharts.theme && Highcharts.theme.textColor) || 'gray'
-                }
-            }
-        },
-        legend: {
-            align: 'right',
-            x: -30,
-            verticalAlign: 'top',
-            y: 25,
-            floating: true,
-            backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || 'white',
-            borderColor: '#CCC',
-            borderWidth: 1,
-            shadow: false
-        },
-        tooltip: {
-            headerFormat: '<b>{point.x}</b><br/>',
-            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
-        },
+        yAxis: { title: {text: 'Total Count'}},
         plotOptions: {
-            column: {
-                stacking: 'normal',
+            series: {
+                borderWidth: 0,
                 dataLabels: {
                     enabled: true,
-                    color: (Highcharts.theme && Highcharts.theme.dataLabelsColor) || 'white'
+                    format: '{point.y:.f}'
                 }
             }
         },
         series: [{
-            name: 'John',
-            data: [5, 3, 4, 7, 2]
-        }, {
-            name: 'Jane',
-            data: [2, 2, 3, 2, 1]
-        }, {
-            name: 'Joe',
-            data: [3, 4, 4, 2, 5]
+            type: 'column',
+            colorByPoint: true,
+            data: (Object.values(sortedTotalMOM)).slice(0, 15),
+            showInLegend: false
+        }]
+
+    });
+
+
+    //Player by team graph
+    graphArray = []
+    for(const team in manOfTheMatch[sortedPlayerName[0]]) {
+        let obj = {
+            name: team,
+            y: manOfTheMatch[sortedPlayerName[0]][team]
+        }
+        graphArray.push(obj);
+    }
+
+
+    // Build the chart
+    $('#container1').show();
+    Highcharts.chart('container1', {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: `Maximum MOM @ ${sortedPlayerName[0]} by teams`
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.y:.f}</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.y:.f}',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    },
+                    connectorColor: 'silver'
+                }
+            }
+        },
+        series: [{
+            name: sortedPlayerName[0],
+            data: graphArray
         }]
     });
 }
