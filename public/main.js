@@ -22,7 +22,7 @@ function toJson(csvData) {
 
 function getJsonFromCSV() {
     const rawFile = new XMLHttpRequest();
-    rawFile.open("GET", "./assests/matches.csv", true);
+    rawFile.open("GET", "./assets/matches.csv", true);
     rawFile.onreadystatechange = function () {
         if (rawFile.readyState === 4) {
             if (rawFile.status === 200 || rawFile.status == 0) {
@@ -36,7 +36,7 @@ function getJsonFromCSV() {
 
 function getJsonFromCSVDeliveries() {
     const rawFile = new XMLHttpRequest();
-    rawFile.open("GET", "./assests/deliveries.csv", true);
+    rawFile.open("GET", "./assets/deliveries.csv", true);
     rawFile.onreadystatechange = function () {
         if (rawFile.readyState === 4) {
             if (rawFile.status === 200 || rawFile.status == 0) {

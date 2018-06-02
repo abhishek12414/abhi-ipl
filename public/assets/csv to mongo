@@ -1,0 +1,5 @@
+mongoimport -d ipl -c matches --type csv --file matches.csv --headerline
+
+mongoimport -d ipl -c deliveries --type csv --file deliveries.csv --headerline
+
+
