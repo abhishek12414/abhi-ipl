@@ -151,14 +151,10 @@ app.get('/extraRuns', (req, res) => {
     ], (err, result) => {
         deliveries.aggregate([
             {
-                $match: {
-                    $and: [
-                        {
-                            match_id: {
-                                $gte: result[0].matchId, $lte: result[result.length - 1].matchId
-                            }
-                        }
-                    ]
+                $match: {                        
+                    match_id: {
+                        $gte: result[0].matchId, $lte: result[result.length - 1].matchId
+                    }                        
                 }
             }
             , {
