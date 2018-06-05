@@ -19,28 +19,6 @@ app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(express.static('public'));
 
-//get all matches
-app.get('/matches', (req, res) => {
-    matches.find({}, (err, allmatches) => {
-        if (err) {
-            res.status(404).send('NOt found')
-        } else {
-            res.status(200).send(allmatches);
-        }
-    });
-});
-
-//get all deliveries
-app.get('/deliveries', (req, res) => {
-    deliveries.find({}, (err, alldeliveries) => {
-        if (err) {
-            res.status(404).send('NOt found')
-        } else {
-            res.status(200).send(alldeliveries);
-        }
-    });
-});
-
 //task 1: played match by year
 app.get('/playedMatches', (req, res) => {
     matches.aggregate([
@@ -178,32 +156,27 @@ app.get('/extraRuns', (req, res) => {
                     $and: [
                         {
                             match_id: {
-                                $gt: result[0].matchId, $lt: result[result.length - 1].matchId
+                                $gte: result[0].matchId, $lte: result[result.length - 1].matchId
                             }
                         }
                     ]
                 }
-            }, {
-                $project: {
-                    _id: 0,
-                    bowling_team: '$bowling_team',
-                    extra_runs: '$extra_runs'
+            }
+            , {
+                $group: {
+                    _id: '$bowling_team',
+                    extra_runs: {$sum: '$extra_runs'}
                 }
+            }, {
+                $sort: {extra_runs: 1}
             }
         ], (err, deliveries) => {
-
             //Reading the deliveries data and calculating the extra runs
             let extraDeliveries = {};
-
             deliveries.forEach((delivery) => {
-                let bowling_team = delivery.bowling_team;
-
-                if (bowling_team in extraDeliveries) {
-                    extraDeliveries[bowling_team] += Number(delivery['extra_runs']);
-                } else {
-                    extraDeliveries[bowling_team] = Number(delivery['extra_runs']);
-                }
+                extraDeliveries[delivery._id] = Number(delivery['extra_runs']);
             });
+            
             res.send(extraDeliveries);
         });
     });
