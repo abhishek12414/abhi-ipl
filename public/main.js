@@ -8,14 +8,14 @@ getJsonFromCSVDeliveries();
 function toJson(csvData) {
     var lines = csvData.split("\n");
     var colNames = lines[0].split(",");
-    var records=[];
-    for(var i = 1; i < lines.length-1; i++) {
-      var record = {};
-      var bits = lines[i].split(",");
-      for (var j = 0 ; j < bits.length ; j++) {
-        record[colNames[j]] = bits[j];
-      }
-      records.push(record);
+    var records = [];
+    for (var i = 1; i < lines.length - 1; i++) {
+        var record = {};
+        var bits = lines[i].split(",");
+        for (var j = 0; j < bits.length; j++) {
+            record[colNames[j]] = bits[j];
+        }
+        records.push(record);
     }
     return records;
 }
@@ -51,33 +51,22 @@ function getJsonFromCSVDeliveries() {
 //Task 1: Plot the number of matches played per year of all the years in IPL.
 function matchesPerYear() {
 
-    // let seasonMatches = {};   
-
-    // for (let match of matches) {
-    //     const season = match.season;
-    //     if(season in seasonMatches) {
-    //         seasonMatches[season] = seasonMatches[season] + 1
-    //     } else {
-    //         seasonMatches[season] = 1;
-    //     }
-    // }
-  
     $.ajax({
         url: '/playedmatches',
-        success: (response)=>{
+        success: (response) => {
             let seasonMatches = {};
-            response.forEach( (row) => {
+            response.forEach((row) => {
                 seasonMatches[row._id] = row.count;
             });
 
             Highcharts.chart('container', {
                 title: { text: 'IPL Data Analysis' },
                 subtitle: { text: 'Matches played per year of all the years in IPL' },
-                xAxis: { 
-                    title: {text: 'Years'},
-                    categories: Object.keys(seasonMatches) 
+                xAxis: {
+                    title: { text: 'Years' },
+                    categories: Object.keys(seasonMatches)
                 },
-                yAxis: { title: {text: 'No. of Maches'}},
+                yAxis: { title: { text: 'No. of Maches' } },
                 plotOptions: {
                     series: {
                         borderWidth: 0,
@@ -93,19 +82,19 @@ function matchesPerYear() {
                     data: Object.values(seasonMatches),
                     showInLegend: false
                 }]
-        
+
             });
             $('#container1').hide();
         }
-    });    
+    });
 }
 
 //Task 2: Plot a stacked bar chart of matches won of all teams over all the years of IPL.
 function winningMatchesPerYear() {
     $.ajax({
         url: '/winningmatches',
-        success: (result)=>{
-            
+        success: (result) => {
+
             Highcharts.chart('container', {
 
                 title: { text: 'IPL Data Analysis' },
@@ -113,7 +102,7 @@ function winningMatchesPerYear() {
                 chart: {
                     type: 'bar'
                 },
-                xAxis: { 
+                xAxis: {
                     categories: result.season,
                     title: {
                         text: 'Years'
@@ -129,7 +118,7 @@ function winningMatchesPerYear() {
                     reversed: true
                 },
                 plotOptions: {
-                    
+
                     series: {
                         stacking: 'normal',
                         dataLabels: {
@@ -140,7 +129,7 @@ function winningMatchesPerYear() {
                 series: result.team
             });
             $('#container1').hide();
-                   
+
         }
     });
 }
@@ -150,17 +139,17 @@ function extraRunPerTeam() {
 
     $.ajax({
         url: '/extraRuns',
-        success: (extraDeliveries)=>{
+        success: (extraDeliveries) => {
             Highcharts.chart('container', {
 
                 title: { text: 'IPL Data Analysis' },
                 subtitle: { text: 'Extra runs conceded per team @2016' },
-                xAxis: { 
-                    title: {text: 'Teams'},
-                    categories: Object.keys(extraDeliveries) 
+                xAxis: {
+                    title: { text: 'Teams' },
+                    categories: Object.keys(extraDeliveries)
                 },
-                yAxis: { 
-                    title: {text: 'No. of extra runs'}
+                yAxis: {
+                    title: { text: 'No. of extra runs' }
                 },
                 plotOptions: {
                     series: {
@@ -177,7 +166,7 @@ function extraRunPerTeam() {
                     data: Object.values(extraDeliveries),
                     showInLegend: false
                 }]
-        
+
             });
             $('#container1').hide();
         }
@@ -188,17 +177,17 @@ function extraRunPerTeam() {
 function topEconomyBowlers() {
     $.ajax({
         url: '/economyBowler',
-        success: (sortBowlers)=>{
+        success: (sortBowlers) => {
             //Display chart
             Highcharts.chart('container', {
 
                 title: { text: 'IPL Data Analysis' },
                 subtitle: { text: 'Top 15 Economical Bowlers @2015, Min Over 15' },
-                xAxis: { 
-                    title: {text: 'Bolwer Name'},
+                xAxis: {
+                    title: { text: 'Bolwer Name' },
                     categories: (Object.keys(sortBowlers)).slice(0, 15)
                 },
-                yAxis: { title: {text: 'Economy'}},
+                yAxis: { title: { text: 'Economy' } },
                 plotOptions: {
                     series: {
                         borderWidth: 0,
@@ -223,20 +212,20 @@ function topEconomyBowlers() {
 
 //Task 5: Story
 function myStory() {
-    
+
     $.ajax({
         url: '/story',
-        success: (response)=>{
+        success: (response) => {
             //Display chart
             Highcharts.chart('container', {
 
                 title: { text: 'IPL Data Analysis' },
                 subtitle: { text: 'Top 15 MOM all years' },
-                xAxis: { 
-                    title: {text: 'Player Name'},
+                xAxis: {
+                    title: { text: 'Player Name' },
                     categories: (Object.keys(response.sortedTotalMOM)).slice(0, 15)
                 },
-                yAxis: { title: {text: 'Total Count'}},
+                yAxis: { title: { text: 'Total Count' } },
                 plotOptions: {
                     series: {
                         borderWidth: 0,

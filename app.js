@@ -1,9 +1,9 @@
-const express = require('express'),
-    app = express(),
-    mongoose = require('mongoose'),
-    bodyparser = require('body-parser'),
-    matches = require('./models/matches'),
-    deliveries = require('./models/deliveries')
+const   express = require('express'),
+        app = express(),
+        mongoose = require('mongoose'),
+        bodyparser = require('body-parser'),
+        matches = require('./models/matches'),
+        deliveries = require('./models/deliveries')
 
 //connect to server
 mongoose.connect('mongodb://localhost:27017/ipl');
@@ -107,7 +107,6 @@ app.get('/winningmatches', (req, res) => {
 
             let seasonWinning = {};
             results.forEach((result) => {
-                console.log(result.winCount);
                 let teamWinArray = {};
                 (result.winCount).forEach((teamObj) => {
                     teamWinArray[teamObj.team] = teamObj.count
@@ -191,13 +190,9 @@ app.get('/economyBowler', (req, res) => {
         deliveries.aggregate([
             {
                 $match: {
-                    $and: [
-                        {
-                            match_id: {
-                                $gt: result[0].matchId, $lt: result[result.length - 1].matchId
-                            }
-                        }
-                    ]
+                    match_id: {
+                        $gte: result[0].matchId, $lte: result[result.length - 1].matchId
+                    }
                 }
             },
             {
@@ -207,6 +202,7 @@ app.get('/economyBowler', (req, res) => {
                     bastman_runs: { $sum: '$batsman_runs' },
                     wide_runs: { $sum: '$wide_runs' },
                     noball_runs: { $sum: '$noball_runs' },
+                    match: { $addToSet: "$match_id"}
                     // runs: {$add: ['$wide_runs', '$noball_runs', '$batsman_runs']}
                 }
             }
@@ -215,7 +211,6 @@ app.get('/economyBowler', (req, res) => {
             let bowlersEconomy = {}
 
             result.forEach((result) => {
-                // console.log(result.balls)
                 if (result.balls > 90)
                     bowlersEconomy[result._id] = ((result.bastman_runs + result.noball_runs + result.wide_runs) * 6) / result.balls;
             })
@@ -254,7 +249,6 @@ app.get('/story', (req, res) => {
         result.forEach((result)=>{
             sortedTotalMOM[result._id] = result.count
         });
-        // console.log(sortedTotalMOM)
 
         graphArray = {}
         teams = {};
@@ -289,6 +283,6 @@ app.get('/story', (req, res) => {
     });
 });
 
-app.listen('3002', () => {
-    console.log('Server is running at : http://localhost:3002/');
+app.listen('3004', () => {
+    console.log('Server is running at : http://localhost:3004/');
 });
