@@ -225,7 +225,7 @@ function myStory() {
                     title: { text: 'Player Name' },
                     categories: (Object.keys(response.sortedTotalMOM)).slice(0, 15)
                 },
-                yAxis: { title: { text: 'Total Count' } },
+                yAxis: { title: { text: 'Total Man of the match' } },
                 plotOptions: {
                     series: {
                         borderWidth: 0,

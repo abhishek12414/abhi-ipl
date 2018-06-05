@@ -1,9 +1,9 @@
-const   express = require('express'),
-        app = express(),
-        mongoose = require('mongoose'),
-        bodyparser = require('body-parser'),
-        matches = require('./models/matches'),
-        deliveries = require('./models/deliveries')
+const express = require('express'),
+    app = express(),
+    mongoose = require('mongoose'),
+    bodyparser = require('body-parser'),
+    matches = require('./models/matches'),
+    deliveries = require('./models/deliveries')
 
 //connect to server
 mongoose.connect('mongodb://localhost:27017/ipl');
@@ -151,19 +151,19 @@ app.get('/extraRuns', (req, res) => {
     ], (err, result) => {
         deliveries.aggregate([
             {
-                $match: {                        
+                $match: {
                     match_id: {
                         $gte: result[0].matchId, $lte: result[result.length - 1].matchId
-                    }                        
+                    }
                 }
             }
             , {
                 $group: {
                     _id: '$bowling_team',
-                    extra_runs: {$sum: '$extra_runs'}
+                    extra_runs: { $sum: '$extra_runs' }
                 }
             }, {
-                $sort: {extra_runs: 1}
+                $sort: { extra_runs: 1 }
             }
         ], (err, deliveries) => {
             //Reading the deliveries data and calculating the extra runs
@@ -171,7 +171,7 @@ app.get('/extraRuns', (req, res) => {
             deliveries.forEach((delivery) => {
                 extraDeliveries[delivery._id] = Number(delivery['extra_runs']);
             });
-            
+
             res.send(extraDeliveries);
         });
     });
@@ -187,41 +187,44 @@ app.get('/economyBowler', (req, res) => {
             {
                 $match: {
                     match_id: {
-                        $gte: result[0].matchId, $lte: result[result.length - 1].matchId
+                        $gte: result[0].matchId, $lte: result[result.length -1].matchId
                     }
                 }
-            },
-            {
-                $group: {
-                    balls: { $sum: 1 },
-                    _id: '$bowler',
-                    bastman_runs: { $sum: '$batsman_runs' },
-                    wide_runs: { $sum: '$wide_runs' },
-                    noball_runs: { $sum: '$noball_runs' },
-                    match: { $addToSet: "$match_id"}
-                    // runs: {$add: ['$wide_runs', '$noball_runs', '$batsman_runs']}
-                }
             }
-        ], (err, result) => {
+            , {
+                $group: {
+                    _id: '$bowler',
+                    balls: { $sum: 1 },
+                    runs: { $sum: { $add: ['$batsman_runs', '$wide_runs', '$noball_runs'] } }
+                }
+            }, {
+                $match: {
+                    balls: {$gte: 90}
+                }
+            },{
+                $project:
+                    {
+                        _id: 0,
+                        name: '$_id',
+                        econ: {
+                            $divide: [{ $multiply: ['$runs', 6] }, '$balls']
+                        }
 
-            let bowlersEconomy = {}
+                    }
+            }, {
+                $sort: { econ: 1 }
+            }, {
+                $limit: 15
+            }
+        ], (err, results) => {
+            
+            let bowlers = {};
 
-            result.forEach((result) => {
-                if (result.balls > 90)
-                    bowlersEconomy[result._id] = ((result.bastman_runs + result.noball_runs + result.wide_runs) * 6) / result.balls;
+            results.forEach((result) => {
+                bowlers[result.name] = result.econ;
             })
 
-            let sortedBowlerName = Object.keys(bowlersEconomy).sort(function (a, b) {
-                return bowlersEconomy[a] - bowlersEconomy[b]
-            });
-
-            let sortBowlers = {};
-
-            for (const name of sortedBowlerName) {
-                sortBowlers[name] = bowlersEconomy[name]
-            }
-
-            res.send(sortBowlers);
+            res.send(bowlers);
         });
     });
 
@@ -233,38 +236,39 @@ app.get('/story', (req, res) => {
         {
             $group: {
                 _id: '$player_of_match',
-                count: {$sum: 1},
-                team: {$push: '$winner'}
+                count: { $sum: 1 },
+                team: { $push: '$winner' }
             }
         }, {
-            $sort: {count: -1}
+            $sort: { count: -1 }
         }
-    ], (err, result)=>{
+    ], (err, result) => {
 
+        res.se
         let sortedTotalMOM = {}
-        result.forEach((result)=>{
+        result.forEach((result) => {
             sortedTotalMOM[result._id] = result.count
         });
 
         graphArray = {}
         teams = {};
 
-        (result[0].team).forEach((team)=> {
-            if(team in teams)
+        (result[0].team).forEach((team) => {
+            if (team in teams)
                 teams[team] += 1
             else
                 teams[team] = 1
         });
 
         let teamPlayedarr = [];
-        for(team in teams){
+        for (team in teams) {
             let teamPlayed = {
                 'name': team,
                 'y': teams[team]
             };
-            teamPlayedarr.push( teamPlayed );
+            teamPlayedarr.push(teamPlayed);
         }
-        
+
 
         graphArray = {
             name: result[0]._id,
