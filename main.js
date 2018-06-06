@@ -294,11 +294,15 @@ function topEconomyBowlers() {
 
             if(bowlerName in economicalBowlers) {
                 economicalBowlers[bowlerName]['runs'] += extraRuns;
-                economicalBowlers[bowlerName]['no_of_balls'] += 1; 
+                if( !(delivery['noball_runs'] || delivery['wide_runs']))
+                    economicalBowlers[bowlerName]['no_of_balls'] += 1; 
             } else {
                 let bowler = {}
                 bowler['runs'] = extraRuns;
-                bowler['no_of_balls'] = 1;
+
+                if( !(delivery['noball_runs'] || delivery['wide_runs']))
+                    bowler['no_of_balls'] = 1;
+                    
                 economicalBowlers[bowlerName] = bowler;
             }
         }
