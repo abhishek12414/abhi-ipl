@@ -48,6 +48,16 @@ function getJsonFromCSVDeliveries() {
     rawFile.send(null);
 };
 
+const operations = (operation) => {
+    $('#container1').hide();
+    switch(operation) {
+        case 'matchesPerYear': matchesPerYear(); break;
+        case 'winningMatchesPerYear': winningMatchesPerYear(); break;
+        case 'extraRunPerTeam': extraRunPerTeam(); break;
+        case 'topEconomyBowlers': topEconomyBowlers(); break;
+        case 'myStory': myStory();
+    }
+}
 
 //Task 1: Plot the number of matches played per year of all the years in IPL.
 function matchesPerYear() {
@@ -89,11 +99,11 @@ function matchesPerYear() {
         }]
 
     });
-    $('#container1').hide();
 }
 
 //Task 2: Plot a stacked bar chart of matches won of all teams over all the years of IPL.
 function winningMatchesPerYear() {
+
     let seasonWinning = {};
 
     for(let match of matches) {
@@ -182,7 +192,6 @@ function winningMatchesPerYear() {
         },
         series: teamWinningByYear
     });
-    $('#container1').hide();
 }
 
 //Task 3: For the year 2016 plot the extra runs conceded per team.
@@ -254,7 +263,6 @@ function extraRunPerTeam() {
         }]
 
     });
-    $('#container1').hide();
 }
 
 //Task 4: For the year 2015 plot the top economical bowlers.
@@ -292,17 +300,17 @@ function topEconomyBowlers() {
                               Number(delivery['noball_runs']) +
                               Number(delivery['batsman_runs']);
 
+            const ball = ( !( Number(delivery['noball_runs']) || Number(delivery['wide_runs'])) ) ? 1 : 0; 
+            
             if(bowlerName in economicalBowlers) {
                 economicalBowlers[bowlerName]['runs'] += extraRuns;
-                if( !(delivery['noball_runs'] || delivery['wide_runs']))
-                    economicalBowlers[bowlerName]['no_of_balls'] += 1; 
+                if(ball !=0 )
+                    economicalBowlers[bowlerName]['no_of_balls'] += ball; 
             } else {
                 let bowler = {}
                 bowler['runs'] = extraRuns;
-
-                if( !(delivery['noball_runs'] || delivery['wide_runs']))
-                    bowler['no_of_balls'] = 1;
-                    
+                if(ball != 0)
+                    bowler['no_of_balls'] = ball;
                 economicalBowlers[bowlerName] = bowler;
             }
         }
@@ -352,7 +360,6 @@ function topEconomyBowlers() {
         }]
 
     });
-    $('#container1').hide();
 }
 
 //Task 5: Story
