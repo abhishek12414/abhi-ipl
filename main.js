@@ -8,14 +8,14 @@ getJsonFromCSVDeliveries();
 function toJson(csvData) {
     var lines = csvData.split("\n");
     var colNames = lines[0].split(",");
-    var records=[];
-    for(var i = 1; i < lines.length-1; i++) {
-      var record = {};
-      var bits = lines[i].split(",");
-      for (var j = 0 ; j < bits.length ; j++) {
-        record[colNames[j]] = bits[j];
-      }
-      records.push(record);
+    var records = [];
+    for (var i = 1; i < lines.length - 1; i++) {
+        var record = {};
+        var bits = lines[i].split(",");
+        for (var j = 0; j < bits.length; j++) {
+            record[colNames[j]] = bits[j];
+        }
+        records.push(record);
     }
     return records;
 }
@@ -50,7 +50,7 @@ function getJsonFromCSVDeliveries() {
 
 const operations = (operation) => {
     $('#container1').hide();
-    switch(operation) {
+    switch (operation) {
         case 'matchesPerYear': matchesPerYear(); break;
         case 'winningMatchesPerYear': winningMatchesPerYear(); break;
         case 'extraRunPerTeam': extraRunPerTeam(); break;
@@ -62,29 +62,24 @@ const operations = (operation) => {
 //Task 1: Plot the number of matches played per year of all the years in IPL.
 function matchesPerYear() {
 
-    let seasonMaches = {};   
+    let seasonMaches = matches.reduce((acc, match) => {
+        acc[match.season] = (acc[match.season]) ? ++acc[match.season] : 1
+        return acc
+    }, {})
 
-    for (let match of matches) {
-        const season = match.season;
-        if(season in seasonMaches) {
-            seasonMaches[season] = seasonMaches[season] + 1
-        } else {
-            seasonMaches[season] = 1;
-        }
-    }
-    
     Highcharts.chart('container', {
 
         title: { text: 'IPL Data Analysis' },
         subtitle: { text: 'Matches played per year of all the years in IPL' },
-        xAxis: { 
-            title: {text: 'Years'},
-            categories: Object.keys(seasonMaches) 
+        xAxis: {
+            title: { text: 'Years' },
+            categories: Object.keys(seasonMaches)
         },
-        yAxis: { title: {text: 'No. of Maches'}},
+        yAxis: { title: { text: 'No. of Maches' } },
         plotOptions: {
             series: {
                 borderWidth: 0,
+                name: 'Total Matches ',
                 dataLabels: {
                     enabled: true,
                     format: '{point.y:.f}'
@@ -106,35 +101,25 @@ function winningMatchesPerYear() {
 
     let seasonWinning = {};
 
-    for(let match of matches) {
-                
-        let winner;
-
-        if(match.winner == 'Rising Pune Supergiants')
-            winner = 'Rising Pune Supergiant';
-        else if(match.winner == "")
-            winner = 'No Result';
-        else 
-            winner = match.winner;
-
-        if(match.season in seasonWinning) {
-            if( seasonWinning[match.season][winner] )
-                seasonWinning[match.season][winner] += 1;
-            else 
-                seasonWinning[match.season][winner] = 1            
+    seasonWinning = matches.reduce((acc, match)=>{
+        if(acc[match.season]) {
+			acc[match.season][match.winner] = (acc[match.season][match.winner]) ? ++(acc[match.season][match.winner]) : 1
         } else {
-            let teamObj = {};
-            teamObj[winner] = 1;
-            seasonWinning[match.season]= teamObj;
+			let obj = {}
+			obj[match.winner] = 1
+            acc[match.season] = obj
         }
-    }
+        return acc;
+    }, {})
+    
+    console.log(seasonWinning);
 
     //print teamnames
     let teamNames = [];
 
     for (let year in seasonWinning) {
-        for(let team in seasonWinning[year]) {
-            if(!teamNames.includes(team))
+        for (let team in seasonWinning[year]) {
+            if (!teamNames.includes(team))
                 teamNames.push(team);
         }
     }
@@ -142,23 +127,23 @@ function winningMatchesPerYear() {
     let teamWinningByYear = [];
 
     //finding winning of each year
-    for(let teamName of teamNames) {
+    for (let teamName of teamNames) {
         let win = [];
-        for(let year in seasonWinning) {
-            if(teamName in seasonWinning[year]) {
+        for (let year in seasonWinning) {
+            if (teamName in seasonWinning[year]) {
                 win.push(seasonWinning[year][teamName])
             } else {
                 win.push(0)
             }
         }
         let obj = {
-            name : teamName,
-            data : win
+            name: teamName,
+            data: win
         }
         teamWinningByYear.push(obj);
     }
 
-        
+
     Highcharts.chart('container', {
 
         title: { text: 'IPL Data Analysis' },
@@ -166,7 +151,7 @@ function winningMatchesPerYear() {
         chart: {
             type: 'bar'
         },
-        xAxis: { 
+        xAxis: {
             categories: Object.keys(seasonWinning),
             title: {
                 text: 'Years'
@@ -182,7 +167,7 @@ function winningMatchesPerYear() {
             reversed: true
         },
         plotOptions: {
-            
+
             series: {
                 stacking: 'normal',
                 dataLabels: {
@@ -199,16 +184,16 @@ function extraRunPerTeam() {
 
     //finding the match ids of particular year
     let yearMatches = {};
-    for(let match of matches) {
+    for (let match of matches) {
         //read season/year
         const season = match.season;
 
-        if(season in yearMatches) {
+        if (season in yearMatches) {
             let ids = yearMatches[season];
             ids.push(match.id)
             yearMatches[season] = ids
         } else {
-            let ids= [];
+            let ids = [];
             ids.push(match.id)
             yearMatches[season] = ids;
         }
@@ -216,7 +201,7 @@ function extraRunPerTeam() {
 
     // filtering match ids of particular year
     const matchYear = 2016;
-    const matchIds =  yearMatches[matchYear];
+    const matchIds = yearMatches[matchYear];
 
     const minMatchId = matchIds[0];
     const maxMatchId = matchIds[matchIds.length - 1]
@@ -224,10 +209,10 @@ function extraRunPerTeam() {
     //Reading the deliveries data and calculating the extra runs
     let extraDeliveries = {};
 
-    for(const delivery of deliveries) {
-        if( Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
+    for (const delivery of deliveries) {
+        if (Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
             const bowling_team = delivery['bowling_team']
-            if(bowling_team in extraDeliveries) {
+            if (bowling_team in extraDeliveries) {
                 extraDeliveries[bowling_team] += Number(delivery['extra_runs']);
             } else {
                 extraDeliveries[bowling_team] = Number(delivery['extra_runs']);
@@ -239,12 +224,12 @@ function extraRunPerTeam() {
 
         title: { text: 'IPL Data Analysis' },
         subtitle: { text: 'Extra runs conceded per team @2016' },
-        xAxis: { 
-            title: {text: 'Teams'},
-            categories: Object.keys(extraDeliveries) 
+        xAxis: {
+            title: { text: 'Teams' },
+            categories: Object.keys(extraDeliveries)
         },
-        yAxis: { 
-            title: {text: 'No. of extra runs'}
+        yAxis: {
+            title: { text: 'No. of extra runs' }
         },
         plotOptions: {
             series: {
@@ -270,46 +255,46 @@ function topEconomyBowlers() {
     //finding the match ids of particular year
     let yearMatches = {};
 
-    for(const match of matches) {
+    for (const match of matches) {
         //read season/year
         const season = match.season;
 
-        if(season in yearMatches) {
+        if (season in yearMatches) {
             (yearMatches[season]).push(match.id)
         } else {
-            let ids= [];
+            let ids = [];
             ids.push(match.id)
             yearMatches[season] = ids;
         }
     }
-    
+
     // filtering match ids of particular year
     const matchYear = 2015;
-    const matchIds =  yearMatches[matchYear];
+    const matchIds = yearMatches[matchYear];
 
     const minMatchId = matchIds[0];
     const maxMatchId = matchIds[matchIds.length - 1];
 
     let economicalBowlers = {};
 
-    for(const delivery of deliveries) {
-        
-        if( Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
-            const bowlerName = delivery['bowler']
-            const extraRuns = Number(delivery['wide_runs']) + 
-                              Number(delivery['noball_runs']) +
-                              Number(delivery['batsman_runs']);
+    for (const delivery of deliveries) {
 
-            const ball = ( !( Number(delivery['noball_runs']) || Number(delivery['wide_runs'])) ) ? 1 : 0; 
-            
-            if(bowlerName in economicalBowlers) {
+        if (Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
+            const bowlerName = delivery['bowler']
+            const extraRuns = Number(delivery['wide_runs']) +
+                Number(delivery['noball_runs']) +
+                Number(delivery['batsman_runs']);
+
+            const ball = (!(Number(delivery['noball_runs']) || Number(delivery['wide_runs']))) ? 1 : 0;
+
+            if (bowlerName in economicalBowlers) {
                 economicalBowlers[bowlerName]['runs'] += extraRuns;
-                if(ball !=0 )
-                    economicalBowlers[bowlerName]['no_of_balls'] += ball; 
+                if (ball != 0)
+                    economicalBowlers[bowlerName]['no_of_balls'] += ball;
             } else {
                 let bowler = {}
                 bowler['runs'] = extraRuns;
-                if(ball != 0)
+                if (ball != 0)
                     bowler['no_of_balls'] = ball;
                 economicalBowlers[bowlerName] = bowler;
             }
@@ -318,31 +303,31 @@ function topEconomyBowlers() {
 
     let bowlersEconomy = {}
 
-    for(bowler in economicalBowlers) {
-        if((economicalBowlers[bowler]['no_of_balls']) >= 90)
-        bowlersEconomy[bowler] = ( Number(economicalBowlers[bowler]['runs']) * 6 / Number(economicalBowlers[bowler]['no_of_balls']));
+    for (bowler in economicalBowlers) {
+        if ((economicalBowlers[bowler]['no_of_balls']) >= 90)
+            bowlersEconomy[bowler] = (Number(economicalBowlers[bowler]['runs']) * 6 / Number(economicalBowlers[bowler]['no_of_balls']));
     }
 
-    let sortedBowlerName = Object.keys(bowlersEconomy).sort(function(a,b){
-        return bowlersEconomy[a]-bowlersEconomy[b]
+    let sortedBowlerName = Object.keys(bowlersEconomy).sort(function (a, b) {
+        return bowlersEconomy[a] - bowlersEconomy[b]
     });
-    
+
     let sortBowlers = {};
 
-    for(const name of sortedBowlerName) {
+    for (const name of sortedBowlerName) {
         sortBowlers[name] = bowlersEconomy[name]
     }
-    
+
     //Display chart
     Highcharts.chart('container', {
 
         title: { text: 'IPL Data Analysis' },
         subtitle: { text: 'Top 15 Economical Bowlers @2015, Min Over 15' },
-        xAxis: { 
-            title: {text: 'Bolwer Name'},
+        xAxis: {
+            title: { text: 'Bolwer Name' },
             categories: (Object.keys(sortBowlers)).slice(0, 15)
         },
-        yAxis: { title: {text: 'Economy'}},
+        yAxis: { title: { text: 'Economy' } },
         plotOptions: {
             series: {
                 borderWidth: 0,
@@ -364,56 +349,56 @@ function topEconomyBowlers() {
 
 //Task 5: Story
 function myStory() {
-    
+
     let manOfTheMatch = {};
 
-    for(const match of matches) {
+    for (const match of matches) {
         let mom = match.player_of_match;
 
-        if(mom === "")
+        if (mom === "")
             continue;
 
-        if( mom in manOfTheMatch) {
+        if (mom in manOfTheMatch) {
 
-            if(manOfTheMatch[mom][match.winner])
+            if (manOfTheMatch[mom][match.winner])
                 manOfTheMatch[mom][match.winner] += 1;
             else
                 manOfTheMatch[mom][match.winner] = 1;
-        
+
         } else {
             let player = {};
             player[match['winner']] = 1;
-            manOfTheMatch[mom] = player;        
+            manOfTheMatch[mom] = player;
         }
     }
 
     let totalMom = {}
-    
+
     for (const playerName in manOfTheMatch) {
         const player = manOfTheMatch[playerName];
-        let sum = (Object.values(player)).reduce(function(acc, val) { return acc + val; });
+        let sum = (Object.values(player)).reduce(function (acc, val) { return acc + val; });
         totalMom[playerName] = sum;
     }
 
-    let sortedPlayerName = Object.keys(totalMom).sort(function(a,b){
-        return totalMom[b]-totalMom[a]
+    let sortedPlayerName = Object.keys(totalMom).sort(function (a, b) {
+        return totalMom[b] - totalMom[a]
     });
 
     let sortedTotalMOM = {}
-    sortedPlayerName.forEach((playerName)=>{
+    sortedPlayerName.forEach((playerName) => {
         sortedTotalMOM[playerName] = totalMom[playerName]
     })
-    
+
     //Display chart
     Highcharts.chart('container', {
 
         title: { text: 'IPL Data Analysis' },
         subtitle: { text: 'Top 15 MOM all years' },
-        xAxis: { 
-            title: {text: 'Player Name'},
+        xAxis: {
+            title: { text: 'Player Name' },
             categories: (Object.keys(sortedTotalMOM)).slice(0, 15)
         },
-        yAxis: { title: {text: 'Total Count'}},
+        yAxis: { title: { text: 'Total Count' } },
         plotOptions: {
             series: {
                 borderWidth: 0,
@@ -435,7 +420,7 @@ function myStory() {
 
     //Player by team graph
     graphArray = []
-    for(const team in manOfTheMatch[sortedPlayerName[0]]) {
+    for (const team in manOfTheMatch[sortedPlayerName[0]]) {
         let obj = {
             name: team,
             y: manOfTheMatch[sortedPlayerName[0]][team]
