@@ -1,52 +1,6 @@
 //to store json result
 let matches;
 let deliveries;
-getJsonFromCSV();
-getJsonFromCSVDeliveries();
-
-//CSV conversion
-function toJson(csvData) {
-    var lines = csvData.split("\n");
-    var colNames = lines[0].split(",");
-    var records = [];
-    for (var i = 1; i < lines.length - 1; i++) {
-        var record = {};
-        var bits = lines[i].split(",");
-        for (var j = 0; j < bits.length; j++) {
-            record[colNames[j]] = bits[j];
-        }
-        records.push(record);
-    }
-    return records;
-}
-
-function getJsonFromCSV() {
-    const rawFile = new XMLHttpRequest();
-    rawFile.open("GET", "./assests/matches.csv", true);
-    rawFile.onreadystatechange = function () {
-        if (rawFile.readyState === 4) {
-            if (rawFile.status === 200 || rawFile.status == 0) {
-                const allText = rawFile.responseText;
-                matches = toJson(allText);
-            }
-        }
-    }
-    rawFile.send(null);
-};
-
-function getJsonFromCSVDeliveries() {
-    const rawFile = new XMLHttpRequest();
-    rawFile.open("GET", "./assests/deliveries.csv", true);
-    rawFile.onreadystatechange = function () {
-        if (rawFile.readyState === 4) {
-            if (rawFile.status === 200 || rawFile.status == 0) {
-                const allText = rawFile.responseText;
-                deliveries = toJson(allText);
-            }
-        }
-    }
-    rawFile.send(null);
-};
 
 const operations = (operation) => {
     $('#container1').hide();
@@ -99,31 +53,39 @@ function matchesPerYear() {
 //Task 2: Plot a stacked bar chart of matches won of all teams over all the years of IPL.
 function winningMatchesPerYear() {
 
+    matches = matches.reduce((acc, match)=>{
+        if(match.winner === 'Rising Pune Supergiants')
+            match.winner = 'Rising Pune Supergiant';
+        else if(match.winner === "")
+            match.winner = "No Result"
+        acc.push(match)
+        return acc
+    }, []);
+
     let seasonWinning = {};
 
     seasonWinning = matches.reduce((acc, match)=>{
         if(acc[match.season]) {
 			acc[match.season][match.winner] = (acc[match.season][match.winner]) ? ++(acc[match.season][match.winner]) : 1
         } else {
-			let obj = {}
-			obj[match.winner] = 1
-            acc[match.season] = obj
+            acc[match.season] = {[match.winner] : 1}
         }
         return acc;
-    }, {})
+    }, [])
+
     
+    s = seasonWinning;
     console.log(seasonWinning);
 
     //print teamnames
-    let teamNames = [];
+    let teamNames = seasonWinning.reduce((acc, season)=>{
+        Object.keys(season).reduce((ac, team)=>{
+        	if(!acc.includes(team))acc.push(team)
+		})
+        return acc;
+    }, []);
 
-    for (let year in seasonWinning) {
-        for (let team in seasonWinning[year]) {
-            if (!teamNames.includes(team))
-                teamNames.push(team);
-        }
-    }
-
+    console.log(teamNames)
     let teamWinningByYear = [];
 
     //finding winning of each year
@@ -143,6 +105,7 @@ function winningMatchesPerYear() {
         teamWinningByYear.push(obj);
     }
 
+    console.log(teamWinningByYear)
 
     Highcharts.chart('container', {
 
@@ -464,3 +427,42 @@ function myStory() {
         }]
     });
 }
+
+//to convert csv to json data
+async function getJson(csvData) {
+    var lines = csvData.split("\n");
+    var colNames = lines[0].split(",");
+    var records = [];
+    for (var i = 1; i < lines.length - 1; i++) {
+        var record = {};
+        var bits = lines[i].split(",");
+        for (var j = 0; j < bits.length; j++) {
+            record[colNames[j]] = bits[j];
+        }
+        records.push(record);
+    }
+    return records;
+}
+
+$(()=>{
+    fetch('./assests/matches.csv')
+    .then((response)=>{
+        return response.text();           
+    }).then((text)=>{
+        getJson(text).then((jsonText)=>{
+            matches = jsonText;
+        })
+    }).then((error)=>{
+    });
+
+
+    fetch('./assests/deliveries.csv')
+    .then((response)=>{
+        return response.text();           
+    }).then((text)=>{
+        getJson(text).then((jsonText)=>{
+            deliveries = jsonText;
+        })
+    }).then((error)=>{
+    });
+})
