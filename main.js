@@ -16,47 +16,31 @@ const operations = (operation) => {
 //Task 1: Plot the number of matches played per year of all the years in IPL.
 function matchesPerYear() {
 
-    let seasonMaches = matches.reduce((acc, match) => {
+    let seasonMatches = matches.reduce((acc, match) => {
         acc[match.season] = (acc[match.season]) ? ++acc[match.season] : 1
         return acc
     }, {})
 
-    Highcharts.chart('container', {
-
-        title: { text: 'IPL Data Analysis' },
-        subtitle: { text: 'Matches played per year of all the years in IPL' },
-        xAxis: {
-            title: { text: 'Years' },
-            categories: Object.keys(seasonMaches)
+    drawHighChart({
+        tiltle: 'IPL Data Analysis',
+        subtitle: 'Matches played per year of all the years in IPL',
+        xAxis : {
+            title: 'Years',
+            data: Object.keys(seasonMatches),
         },
-        yAxis: { title: { text: 'No. of Maches' } },
-        plotOptions: {
-            series: {
-                borderWidth: 0,
-                name: 'Total Matches ',
-                dataLabels: {
-                    enabled: true,
-                    format: '{point.y:.f}'
-                }
-            }
-        },
-        series: [{
-            type: 'column',
-            colorByPoint: true,
-            data: Object.values(seasonMaches),
-            showInLegend: false
-        }]
-
-    });
+        yAxis: { tiltle: 'No. of Maches' },
+        plotOptions: { name: 'Total Matches ', format: ".f" },
+        series: { data: Object.values(seasonMatches) }
+    });    
 }
 
 //Task 2: Plot a stacked bar chart of matches won of all teams over all the years of IPL.
 function winningMatchesPerYear() {
 
-    matches = matches.reduce((acc, match)=>{
-        if(match.winner === 'Rising Pune Supergiants')
+    matches = matches.reduce((acc, match) => {
+        if (match.winner === 'Rising Pune Supergiants')
             match.winner = 'Rising Pune Supergiant';
-        else if(match.winner === "")
+        else if (match.winner === "")
             match.winner = "No Result"
         acc.push(match)
         return acc
@@ -64,24 +48,22 @@ function winningMatchesPerYear() {
 
     let seasonWinning = {};
 
-    seasonWinning = matches.reduce((acc, match)=>{
-        if(acc[match.season]) {
-			acc[match.season][match.winner] = (acc[match.season][match.winner]) ? ++(acc[match.season][match.winner]) : 1
+    seasonWinning = matches.reduce((acc, match) => {
+        if (acc[match.season]) {
+            acc[match.season][match.winner] = (acc[match.season][match.winner]) ? ++(acc[match.season][match.winner]) : 1
         } else {
-            acc[match.season] = {[match.winner] : 1}
+            acc[match.season] = { [match.winner]: 1 }
         }
         return acc;
     }, [])
 
-    
-    s = seasonWinning;
     console.log(seasonWinning);
 
     //print teamnames
-    let teamNames = seasonWinning.reduce((acc, season)=>{
-        Object.keys(season).reduce((ac, team)=>{
-        	if(!acc.includes(team))acc.push(team)
-		})
+    let teamNames = seasonWinning.reduce((acc, season) => {
+        Object.keys(season).reduce((ac, team) => {
+            if (!acc.includes(team)) acc.push(team)
+        })
         return acc;
     }, []);
 
@@ -144,72 +126,64 @@ function winningMatchesPerYear() {
 
 //Task 3: For the year 2016 plot the extra runs conceded per team.
 function extraRunPerTeam() {
+    
+    const matchYear = 2016;
 
     //finding the match ids of particular year
-    let yearMatches = {};
-    for (let match of matches) {
-        //read season/year
-        const season = match.season;
+    // let yearMatches = matches.reduce((acc, match)=>{
+    //     if(acc[match.season]){
+    //         acc[match.season].push(match.id)
+    //     } else {
+    //         acc[match.season] = [match.id]
+    //     }
+    //     return acc
+    // }, {});
 
-        if (season in yearMatches) {
-            let ids = yearMatches[season];
-            ids.push(match.id)
-            yearMatches[season] = ids
-        } else {
-            let ids = [];
-            ids.push(match.id)
-            yearMatches[season] = ids;
-        }
-    }
+    let yearMatches = matches.filter((match)=> {
+        if( Number(match.season) === matchYear) return match
+    }).reduce((acc, match)=>{
+        if(acc[match.season]){
+                acc[match.season].push(match.id)
+            } else {
+                acc[match.season] = [match.id]
+            }
+            return acc
+    }, {});
 
     // filtering match ids of particular year
-    const matchYear = 2016;
     const matchIds = yearMatches[matchYear];
 
-    const minMatchId = matchIds[0];
-    const maxMatchId = matchIds[matchIds.length - 1]
-
+    const minMatchId = Number(matchIds[0]);
+    const maxMatchId = Number(matchIds[matchIds.length - 1])
+    
     //Reading the deliveries data and calculating the extra runs
-    let extraDeliveries = {};
+    let extraDeliveries = deliveries.filter(delivery => {
+        return (delivery.match_id >= minMatchId && delivery.match_id <= maxMatchId) 
+    }).reduce((acc, eachDelivery)=>{
+        if(acc[eachDelivery.bowling_team])
+            acc[eachDelivery.bowling_team] += Number(eachDelivery.extra_runs)
+        else
+            acc[eachDelivery.bowling_team] = Number(eachDelivery.extra_runs)
+        return acc
+    }, {});
 
-    for (const delivery of deliveries) {
-        if (Number(delivery.match_id) >= minMatchId && Number(delivery.match_id) <= maxMatchId) {
-            const bowling_team = delivery['bowling_team']
-            if (bowling_team in extraDeliveries) {
-                extraDeliveries[bowling_team] += Number(delivery['extra_runs']);
-            } else {
-                extraDeliveries[bowling_team] = Number(delivery['extra_runs']);
-            }
-        }
-    }
-
-    Highcharts.chart('container', {
-
-        title: { text: 'IPL Data Analysis' },
-        subtitle: { text: 'Extra runs conceded per team @2016' },
-        xAxis: {
-            title: { text: 'Teams' },
-            categories: Object.keys(extraDeliveries)
+    drawHighChart({
+        tiltle: 'IPL Data Analysis',
+        subtitle: 'Extra runs conceded per team @2016',
+        xAxis : {
+            title: 'Teams',
+            data: Object.keys(extraDeliveries),
         },
         yAxis: {
-            title: { text: 'No. of extra runs' }
+            tiltle: 'No. of extra runs'
         },
         plotOptions: {
-            series: {
-                borderWidth: 0,
-                dataLabels: {
-                    enabled: true,
-                    format: '{point.y:.f}'
-                }
-            }
+            name: 'Extra Runs ',
+            format: ".f"
         },
-        series: [{
-            type: 'column',
-            colorByPoint: true,
+        series: {
             data: Object.values(extraDeliveries),
-            showInLegend: false
-        }]
-
+        }
     });
 }
 
@@ -281,32 +255,23 @@ function topEconomyBowlers() {
         sortBowlers[name] = bowlersEconomy[name]
     }
 
-    //Display chart
-    Highcharts.chart('container', {
-
-        title: { text: 'IPL Data Analysis' },
-        subtitle: { text: 'Top 15 Economical Bowlers @2015, Min Over 15' },
-        xAxis: {
-            title: { text: 'Bolwer Name' },
-            categories: (Object.keys(sortBowlers)).slice(0, 15)
+    drawHighChart({
+        tiltle: 'IPL Data Analysis',
+        subtitle: 'Top 15 Economical Bowlers @2015, Min Over 15',
+        xAxis : {
+            title: 'Bolwer Name',
+            data: (Object.keys(sortBowlers)).slice(0, 15),
         },
-        yAxis: { title: { text: 'Economy' } },
+        yAxis: {
+            tiltle: 'Economy'
+        },
         plotOptions: {
-            series: {
-                borderWidth: 0,
-                dataLabels: {
-                    enabled: true,
-                    format: '{point.y:.2f}'
-                }
-            }
+            name: 'Economy ',
+            format: ".2f"
         },
-        series: [{
-            type: 'column',
-            colorByPoint: true,
+        series: {
             data: (Object.values(sortBowlers)).slice(0, 15),
-            showInLegend: false
-        }]
-
+        }
     });
 }
 
@@ -353,34 +318,25 @@ function myStory() {
     })
 
     //Display chart
-    Highcharts.chart('container', {
-
-        title: { text: 'IPL Data Analysis' },
-        subtitle: { text: 'Top 15 MOM all years' },
-        xAxis: {
-            title: { text: 'Player Name' },
-            categories: (Object.keys(sortedTotalMOM)).slice(0, 15)
+    drawHighChart({
+        tiltle: 'IPL Data Analysis',
+        subtitle: 'Top 15 MOM all years',
+        xAxis : {
+            title: 'Player Name',
+            data: (Object.keys(sortedTotalMOM)).slice(0, 15),
         },
-        yAxis: { title: { text: 'Total Count' } },
+        yAxis: {
+            tiltle: 'Total Count'
+        },
         plotOptions: {
-            series: {
-                borderWidth: 0,
-                dataLabels: {
-                    enabled: true,
-                    format: '{point.y:.f}'
-                }
-            }
+            name: 'Total Matches',
+            format: ".f"
         },
-        series: [{
-            type: 'column',
-            colorByPoint: true,
+        series: {
             data: (Object.values(sortedTotalMOM)).slice(0, 15),
-            showInLegend: false
-        }]
-
+        }
     });
-
-
+    
     //Player by team graph
     graphArray = []
     for (const team in manOfTheMatch[sortedPlayerName[0]]) {
@@ -391,9 +347,9 @@ function myStory() {
         graphArray.push(obj);
     }
 
-
     // Build the chart
     $('#container1').show();
+    
     Highcharts.chart('container1', {
         chart: {
             plotBackgroundColor: null,
@@ -428,6 +384,37 @@ function myStory() {
     });
 }
 
+//highchart plot
+const drawHighChart = (data) => {
+    Highcharts.chart('container', {
+
+        title: { text: data.title },
+        subtitle: { text: data.subtitle },
+        xAxis: {
+            title: { text: data.xAxis.tiltle },
+            categories: data.xAxis.data
+        },
+        yAxis: { title: { text: data.yAxis.tiltle } },
+        plotOptions: {
+            series: {
+                borderWidth: 0,
+                name: data.plotOptions.name,
+                dataLabels: {
+                    enabled: true,
+                    format: `{point.y:${data.plotOptions.format}}`
+                }
+            }
+        },
+        series: [{
+            type: 'column',
+            colorByPoint: true,
+            data: data.series.data,
+            showInLegend: false
+        }]
+
+    });
+}
+
 //to convert csv to json data
 async function getJson(csvData) {
     var lines = csvData.split("\n");
@@ -444,25 +431,26 @@ async function getJson(csvData) {
     return records;
 }
 
-$(()=>{
-    fetch('./assests/matches.csv')
-    .then((response)=>{
-        return response.text();           
-    }).then((text)=>{
-        getJson(text).then((jsonText)=>{
-            matches = jsonText;
-        })
-    }).then((error)=>{
-    });
+// load the file on script load
+$(() => {
 
+    $('#mainContainer').hide();
+    fetch('./assests/matches.csv')
+        .then((response) => {
+            return response.text();
+        }).then((text) => {
+           return getJson(text).then((jsonText)=>{
+                matches = jsonText;
+           })
+        })
 
     fetch('./assests/deliveries.csv')
-    .then((response)=>{
-        return response.text();           
-    }).then((text)=>{
-        getJson(text).then((jsonText)=>{
-            deliveries = jsonText;
+        .then((response) => {
+            return response.text();
+        }).then((text) => {
+            getJson(text).then((jsonText) => {
+                deliveries = jsonText;
+            })
         })
-    }).then((error)=>{
-    });
+    $('#mainContainer').show();
 })
